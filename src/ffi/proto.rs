@@ -1,7 +1,7 @@
 //! Safe Rust wrappers over the C23 protocol dissectors in proto/.
 
 use std::ffi::CStr;
-use std::net::{Ipv4Addr, Ipv6Addr};
+
 
 /* ── Raw C structs (must match proto/proto.h exactly) ───────────────────────── */
 

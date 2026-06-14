@@ -196,7 +196,7 @@ fn run_read(file: PathBuf, display_filter: Option<&str>) -> Result<()> {
         .map(DisplayFilter::parse)
         .transpose()?;
 
-    let mut src = PcapFileCapture::open(&file)?;
+    let src = PcapFileCapture::open(&file)?;
     let decoder = EtherparseDecoder;
 
     let rt = tokio::runtime::Runtime::new()?;
