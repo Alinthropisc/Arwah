@@ -30,7 +30,8 @@ serde_json    = { workspace = true }
 libc          = "0.2"
 
 [dev-dependencies]
-rstest = { workspace = true }
-tokio  = { workspace = true, features = ["test-util"] }
+rstest    = { workspace = true }
+tokio     = { workspace = true, features = ["test-util"] }
+tempfile  = "3"
 
 libc = "0.2"

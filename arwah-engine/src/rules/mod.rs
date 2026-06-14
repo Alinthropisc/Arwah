@@ -15,7 +15,7 @@ use b579_core::{
     protocol::L4Protocol,
 };
 use chrono::Utc;
-use std::{net::IpAddr, path::Path, str::FromStr};
+use std::net::IpAddr;
 
 // ── public surface ────────────────────────────────────────────────────────────
 
@@ -222,14 +222,21 @@ mod tests {
     }
 
     #[test]
-    fn parse_simple_rule() {
-        let rules = load_rules(std::io::Cursor::new(
-            r#"alert tcp any any -> any 80 (msg:"HTTP probe"; sid:1001; rev:1;)"#
-        ));
-        // parse_rule directly
-        let rule_str = r#"alert tcp any any -> any 80 (msg:"HTTP probe"; sid:1001; rev:1;)"#;
-        // manual test via private parse (test through matches)
+    fn empty_ruleset_matches_nothing() {
         let set = SuricataRuleSet::new(vec![]);
         assert!(set.check(&pkt(Some(L4Protocol::Tcp), Some(80))).is_none());
+    }
+
+    #[test]
+    fn load_rules_from_file() {
+        use std::io::Write as _;
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        writeln!(tmp, r#"alert tcp any any -> any 80 (msg:"HTTP probe"; sid:1001; rev:1;)"#).unwrap();
+        let rules = load_rules(tmp.path()).unwrap();
+        assert_eq!(rules.len(), 1);
+        assert_eq!(rules[0].sid, 1001);
+        let set = SuricataRuleSet::new(rules);
+        assert!(set.check(&pkt(Some(L4Protocol::Tcp), Some(80))).is_some());
+        assert!(set.check(&pkt(Some(L4Protocol::Udp), Some(80))).is_none());
     }
 }

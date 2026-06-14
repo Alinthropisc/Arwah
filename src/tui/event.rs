@@ -1,4 +1,4 @@
-use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, EventStream, KeyEvent};
 use futures::StreamExt;
 use std::time::Duration;
 

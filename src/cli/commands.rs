@@ -135,7 +135,7 @@ fn run_capture(
     iface: Option<&str>,
     bpf: Option<&str>,
     count: u64,
-    write: Option<PathBuf>,
+    _write: Option<PathBuf>,
 ) -> Result<()> {
     use arwah_engine::capture::LiveCapture;
     use b579_core::capture::CaptureSource;
@@ -289,6 +289,7 @@ fn run_flows(iface: Option<&str>, bpf: Option<&str>, sort: FlowSort) -> Result<(
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async {
         use arwah_engine::{capture::LiveCapture, session::CaptureSession};
+        use b579_core::capture::CaptureSource;
 
         let mut cap = LiveCapture::open(&iface)?;
         if let Some(expr) = bpf {

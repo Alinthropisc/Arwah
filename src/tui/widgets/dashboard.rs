@@ -2,7 +2,7 @@ use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    widgets::{BarChart, Block, Borders, List, ListItem, Paragraph},
+    widgets::{BarChart, Block, Borders, List, ListItem},
 };
 
 use crate::tui::app::AppState;
