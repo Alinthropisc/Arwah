@@ -15,7 +15,10 @@ use dashmap::DashMap;
 use std::{
     collections::HashSet,
     net::IpAddr,
-    sync::{Arc, atomic::{AtomicU64, Ordering}},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
 };
 use tokio::sync::broadcast;
 
@@ -31,23 +34,23 @@ trait FlowRule: Send + Sync {
     fn check_flow(&self, flow: &FlowRecord) -> Option<Alert>;
 }
 
-type VerticalMap  = DashMap<(IpAddr, IpAddr), HashSet<u16>>;
-type HorizontalMap = DashMap<(IpAddr, u16),   HashSet<IpAddr>>;
+type VerticalMap = DashMap<(IpAddr, IpAddr), HashSet<u16>>;
+type HorizontalMap = DashMap<(IpAddr, u16), HashSet<IpAddr>>;
 
 #[derive(Default)]
 struct State {
-    syn:        DashMap<IpAddr, u64>,
-    icmp:       DashMap<IpAddr, u64>,
-    vert_scan:  VerticalMap,
+    syn: DashMap<IpAddr, u64>,
+    icmp: DashMap<IpAddr, u64>,
+    vert_scan: VerticalMap,
     horiz_scan: HorizontalMap,
 }
 
 pub struct AlertEngine {
-    rules:      Vec<Box<dyn Rule>>,
+    rules: Vec<Box<dyn Rule>>,
     flow_rules: Vec<Box<dyn FlowRule>>,
-    state:      Arc<State>,
-    pub tx:     broadcast::Sender<Alert>,
-    seq:        AtomicU64,
+    state: Arc<State>,
+    pub tx: broadcast::Sender<Alert>,
+    seq: AtomicU64,
 }
 
 impl AlertEngine {
@@ -55,17 +58,19 @@ impl AlertEngine {
         let (tx, _) = broadcast::channel(CAP);
         Self {
             rules: vec![
-                Box::new(SynFlood      { threshold: 200 }),
-                Box::new(IcmpFlood     { threshold: 500 }),
+                Box::new(SynFlood { threshold: 200 }),
+                Box::new(IcmpFlood { threshold: 500 }),
                 Box::new(BadTtl),
                 Box::new(SuspPort),
-                Box::new(VerticalScan  { threshold: 20 }),
-                Box::new(HorizontalScan{ threshold: 15 }),
-                Box::new(DnsExfil     { max_payload: 80 }),
+                Box::new(VerticalScan { threshold: 20 }),
+                Box::new(HorizontalScan { threshold: 15 }),
+                Box::new(DnsExfil { max_payload: 80 }),
                 Box::new(TlsNoSni),
             ],
             flow_rules: vec![
-                Box::new(LargeTransfer { threshold_bytes: 100 * 1024 * 1024 }), // 100 MB
+                Box::new(LargeTransfer {
+                    threshold_bytes: 100 * 1024 * 1024,
+                }), // 100 MB
             ],
             state: Arc::new(State::default()),
             tx,
@@ -73,7 +78,9 @@ impl AlertEngine {
         }
     }
 
-    pub fn subscribe(&self) -> broadcast::Receiver<Alert> { self.tx.subscribe() }
+    pub fn subscribe(&self) -> broadcast::Receiver<Alert> {
+        self.tx.subscribe()
+    }
 
     /// Evaluate all per-packet rules.
     pub fn inspect(&self, pkt: &ParsedPacket) {
@@ -103,52 +110,99 @@ impl AlertEngine {
     }
 }
 
-impl Default for AlertEngine { fn default() -> Self { Self::new() } }
+impl Default for AlertEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 fn alert(sev: Severity, cat: AlertCategory, msg: String, pkt: &ParsedPacket) -> Alert {
-    Alert { id: 0, timestamp: Utc::now(), severity: sev, category: cat, message: msg,
-            src_ip: pkt.src_ip, dst_ip: pkt.dst_ip,
-            src_port: pkt.src_port, dst_port: pkt.dst_port }
+    Alert {
+        id: 0,
+        timestamp: Utc::now(),
+        severity: sev,
+        category: cat,
+        message: msg,
+        src_ip: pkt.src_ip,
+        dst_ip: pkt.dst_ip,
+        src_port: pkt.src_port,
+        dst_port: pkt.dst_port,
+    }
 }
 
 fn flow_alert(sev: Severity, cat: AlertCategory, msg: String, flow: &FlowRecord) -> Alert {
-    Alert { id: 0, timestamp: Utc::now(), severity: sev, category: cat, message: msg,
-            src_ip: Some(flow.key.src_ip), dst_ip: Some(flow.key.dst_ip),
-            src_port: Some(flow.key.src_port), dst_port: Some(flow.key.dst_port) }
+    Alert {
+        id: 0,
+        timestamp: Utc::now(),
+        severity: sev,
+        category: cat,
+        message: msg,
+        src_ip: Some(flow.key.src_ip),
+        dst_ip: Some(flow.key.dst_ip),
+        src_port: Some(flow.key.src_port),
+        dst_port: Some(flow.key.dst_port),
+    }
 }
 
 // ── per-packet rules ─────────────────────────────────────────────────────────
 
-struct SynFlood { threshold: u64 }
+struct SynFlood {
+    threshold: u64,
+}
 impl Rule for SynFlood {
     fn check(&self, pkt: &ParsedPacket, s: &State) -> Option<Alert> {
-        if pkt.l4 != Some(L4Protocol::Tcp) || !pkt.flags.is_connection_start() { return None; }
+        if pkt.l4 != Some(L4Protocol::Tcp) || !pkt.flags.is_connection_start() {
+            return None;
+        }
         let src = pkt.src_ip?;
-        let mut c = s.syn.entry(src).or_insert(0); *c += 1;
-        (*c == self.threshold).then(|| alert(Severity::High, AlertCategory::SynFlood,
-            format!("SYN flood from {src}: {} SYNs", *c), pkt))
+        let mut c = s.syn.entry(src).or_insert(0);
+        *c += 1;
+        (*c == self.threshold).then(|| {
+            alert(
+                Severity::High,
+                AlertCategory::SynFlood,
+                format!("SYN flood from {src}: {} SYNs", *c),
+                pkt,
+            )
+        })
     }
 }
 
-struct IcmpFlood { threshold: u64 }
+struct IcmpFlood {
+    threshold: u64,
+}
 impl Rule for IcmpFlood {
     fn check(&self, pkt: &ParsedPacket, s: &State) -> Option<Alert> {
-        if pkt.l4 != Some(L4Protocol::Icmp) { return None; }
+        if pkt.l4 != Some(L4Protocol::Icmp) {
+            return None;
+        }
         let src = pkt.src_ip?;
-        let mut c = s.icmp.entry(src).or_insert(0); *c += 1;
-        (*c == self.threshold).then(|| alert(Severity::Medium, AlertCategory::IcmpFlood,
-            format!("ICMP flood from {src}"), pkt))
+        let mut c = s.icmp.entry(src).or_insert(0);
+        *c += 1;
+        (*c == self.threshold).then(|| {
+            alert(
+                Severity::Medium,
+                AlertCategory::IcmpFlood,
+                format!("ICMP flood from {src}"),
+                pkt,
+            )
+        })
     }
 }
 
 struct BadTtl;
 impl Rule for BadTtl {
     fn check(&self, pkt: &ParsedPacket, _: &State) -> Option<Alert> {
-        (pkt.ttl.unwrap_or(128) <= 1 && pkt.l4 != Some(L4Protocol::Icmp)).then(||
-            alert(Severity::Low, AlertCategory::AbnormalTtl,
-                format!("TTL={}", pkt.ttl.unwrap_or(0)), pkt))
+        (pkt.ttl.unwrap_or(128) <= 1 && pkt.l4 != Some(L4Protocol::Icmp)).then(|| {
+            alert(
+                Severity::Low,
+                AlertCategory::AbnormalTtl,
+                format!("TTL={}", pkt.ttl.unwrap_or(0)),
+                pkt,
+            )
+        })
     }
 }
 
@@ -158,12 +212,13 @@ impl Rule for SuspPort {
         const BAD: &[u16] = &[4444, 31337, 1337, 6667, 9001, 9030, 14433];
         pkt.dst_port
             .filter(|p| BAD.contains(p))
-            .map(|p| alert(Severity::Medium, AlertCategory::SuspiciousPort,
-                format!("Suspicious port {p}"), pkt))
+            .map(|p| alert(Severity::Medium, AlertCategory::SuspiciousPort, format!("Suspicious port {p}"), pkt))
     }
 }
 
-struct VerticalScan { threshold: usize }
+struct VerticalScan {
+    threshold: usize,
+}
 impl Rule for VerticalScan {
     fn check(&self, pkt: &ParsedPacket, s: &State) -> Option<Alert> {
         let src = pkt.src_ip?;
@@ -172,42 +227,63 @@ impl Rule for VerticalScan {
         let mut entry = s.vert_scan.entry((src, dst)).or_default();
         entry.insert(port);
         let count = entry.len();
-        (count == self.threshold).then(|| alert(
-            Severity::High, AlertCategory::PortScan,
-            format!("Vertical port scan: {src} → {dst}, {count} ports"), pkt,
-        ))
+        (count == self.threshold).then(|| {
+            alert(
+                Severity::High,
+                AlertCategory::PortScan,
+                format!("Vertical port scan: {src} → {dst}, {count} ports"),
+                pkt,
+            )
+        })
     }
 }
 
-struct HorizontalScan { threshold: usize }
+struct HorizontalScan {
+    threshold: usize,
+}
 impl Rule for HorizontalScan {
     fn check(&self, pkt: &ParsedPacket, s: &State) -> Option<Alert> {
-        let src  = pkt.src_ip?;
-        let dst  = pkt.dst_ip?;
+        let src = pkt.src_ip?;
+        let dst = pkt.dst_ip?;
         let port = pkt.dst_port?;
         let mut entry = s.horiz_scan.entry((src, port)).or_default();
         entry.insert(dst);
         let count = entry.len();
-        (count == self.threshold).then(|| alert(
-            Severity::High, AlertCategory::PortScan,
-            format!("Horizontal port scan: {src} port {port} → {count} hosts"), pkt,
-        ))
+        (count == self.threshold).then(|| {
+            alert(
+                Severity::High,
+                AlertCategory::PortScan,
+                format!("Horizontal port scan: {src} port {port} → {count} hosts"),
+                pkt,
+            )
+        })
     }
 }
 
 /// DNS exfiltration heuristic: unusually large DNS query payload.
 /// Normal DNS queries are < 60 bytes; data-exfil queries are typically > 80.
-struct DnsExfil { max_payload: usize }
+struct DnsExfil {
+    max_payload: usize,
+}
 impl Rule for DnsExfil {
     fn check(&self, pkt: &ParsedPacket, _: &State) -> Option<Alert> {
-        if pkt.app != AppProtocol::Dns { return None; }
-        if pkt.l4  != Some(L4Protocol::Udp) { return None; }
-        (pkt.payload_len > self.max_payload).then(|| alert(
-            Severity::High, AlertCategory::DnsExfiltration,
-            format!("DNS exfiltration: payload {} bytes (threshold {})",
-                pkt.payload_len, self.max_payload),
-            pkt,
-        ))
+        if pkt.app != AppProtocol::Dns {
+            return None;
+        }
+        if pkt.l4 != Some(L4Protocol::Udp) {
+            return None;
+        }
+        (pkt.payload_len > self.max_payload).then(|| {
+            alert(
+                Severity::High,
+                AlertCategory::DnsExfiltration,
+                format!(
+                    "DNS exfiltration: payload {} bytes (threshold {})",
+                    pkt.payload_len, self.max_payload
+                ),
+                pkt,
+            )
+        })
     }
 }
 
@@ -217,31 +293,47 @@ struct TlsNoSni;
 impl Rule for TlsNoSni {
     fn check(&self, pkt: &ParsedPacket, _: &State) -> Option<Alert> {
         let port = pkt.dst_port?;
-        if port != 443 && port != 8443 { return None; }
-        if pkt.l4 != Some(L4Protocol::Tcp) { return None; }
+        if port != 443 && port != 8443 {
+            return None;
+        }
+        if pkt.l4 != Some(L4Protocol::Tcp) {
+            return None;
+        }
         // App protocol not resolved as HTTPS despite going to 443 → anomaly
-        (pkt.app != AppProtocol::Https && pkt.app != AppProtocol::Unknown).then(|| alert(
-            Severity::Medium, AlertCategory::TlsAnomalyNoSni,
-            format!("TLS port {port} carrying {:?} — possible tunnel", pkt.app),
-            pkt,
-        ))
+        (pkt.app != AppProtocol::Https && pkt.app != AppProtocol::Unknown).then(|| {
+            alert(
+                Severity::Medium,
+                AlertCategory::TlsAnomalyNoSni,
+                format!("TLS port {port} carrying {:?} — possible tunnel", pkt.app),
+                pkt,
+            )
+        })
     }
 }
 
 // ── per-flow rules ────────────────────────────────────────────────────────────
 
 /// Alert when a single flow transfers more than `threshold_bytes` total.
-struct LargeTransfer { threshold_bytes: u64 }
+struct LargeTransfer {
+    threshold_bytes: u64,
+}
 impl FlowRule for LargeTransfer {
     fn check_flow(&self, flow: &FlowRecord) -> Option<Alert> {
         let total = flow.total_bytes();
-        (total >= self.threshold_bytes).then(|| flow_alert(
-            Severity::Medium, AlertCategory::LargeTransfer,
-            format!("Large transfer: {} MB in flow {}:{} → {}:{}",
-                total / (1024 * 1024),
-                flow.key.src_ip, flow.key.src_port,
-                flow.key.dst_ip, flow.key.dst_port),
-            flow,
-        ))
+        (total >= self.threshold_bytes).then(|| {
+            flow_alert(
+                Severity::Medium,
+                AlertCategory::LargeTransfer,
+                format!(
+                    "Large transfer: {} MB in flow {}:{} → {}:{}",
+                    total / (1024 * 1024),
+                    flow.key.src_ip,
+                    flow.key.src_port,
+                    flow.key.dst_ip,
+                    flow.key.dst_port
+                ),
+                flow,
+            )
+        })
     }
 }

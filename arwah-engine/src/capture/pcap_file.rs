@@ -13,7 +13,7 @@ use tracing::debug;
 /// Replay packets from an existing `.pcap` / `.pcapng` file.
 pub struct PcapFileCapture {
     handle: Capture<Offline>,
-    path:   String,
+    path: String,
 }
 
 // SAFETY: Capture<Offline> wraps *mut pcap_t. All ops require &mut self.
@@ -22,10 +22,13 @@ unsafe impl Sync for PcapFileCapture {}
 
 impl PcapFileCapture {
     pub fn open(path: &Path) -> ArwahResult<Self> {
-        let handle = Capture::from_file(path)
-            .map_err(|e| ArwahError::Capture(e.to_string()))?;
+        let handle =
+            Capture::from_file(path).map_err(|e| ArwahError::Capture(e.to_string()))?;
         debug!(path = %path.display(), "opened pcap file");
-        Ok(Self { handle, path: path.display().to_string() })
+        Ok(Self {
+            handle,
+            path: path.display().to_string(),
+        })
     }
 }
 
@@ -60,5 +63,7 @@ impl CaptureSource for PcapFileCapture {
         Ok(CaptureStats::default())
     }
 
-    fn close(self: Box<Self>) { drop(self); }
+    fn close(self: Box<Self>) {
+        drop(self);
+    }
 }

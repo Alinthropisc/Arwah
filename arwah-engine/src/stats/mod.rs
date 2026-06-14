@@ -7,42 +7,39 @@ use b579_core::{
 };
 use chrono::Utc;
 use parking_lot::RwLock;
-use std::{
-    collections::HashMap,
-    net::IpAddr,
-    sync::Arc,
-    time::Instant,
-};
+use std::{collections::HashMap, net::IpAddr, sync::Arc, time::Instant};
 
 /// One-second sliding window for PPS/BPS.
 /// Keeps two buckets (current + previous); swaps when the second rolls over.
 #[derive(Debug)]
 struct RateTracker {
-    cur_pkts:    u64,
-    cur_bytes:   u64,
-    prev_pkts:   u64,
-    prev_bytes:  u64,
+    cur_pkts: u64,
+    cur_bytes: u64,
+    prev_pkts: u64,
+    prev_bytes: u64,
     window_start: Instant,
 }
 
 impl RateTracker {
     fn new() -> Self {
         Self {
-            cur_pkts: 0, cur_bytes: 0,
-            prev_pkts: 0, prev_bytes: 0,
+            cur_pkts: 0,
+            cur_bytes: 0,
+            prev_pkts: 0,
+            prev_bytes: 0,
             window_start: Instant::now(),
         }
     }
 
     fn record(&mut self, bytes: u64) {
         if self.window_start.elapsed().as_secs() >= 1 {
-            self.prev_pkts  = self.cur_pkts;
+            self.prev_pkts = self.cur_pkts;
             self.prev_bytes = self.cur_bytes;
-            self.cur_pkts   = 0;
-            self.cur_bytes  = 0;
+            self.cur_pkts = 0;
+            self.cur_bytes = 0;
             self.window_start = Instant::now();
         }
-        self.cur_pkts  += 1;
+        self.cur_pkts += 1;
         self.cur_bytes += bytes;
     }
 
@@ -53,7 +50,9 @@ impl RateTracker {
 }
 
 impl Default for RateTracker {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Rolling statistics aggregator.
@@ -66,20 +65,22 @@ pub struct StatsEngine {
 
 #[derive(Debug, Default)]
 struct Inner {
-    total_packets:  u64,
-    total_bytes:    u64,
-    proto_pkts:     HashMap<L4Protocol,  u64>,
-    proto_bytes:    HashMap<L4Protocol,  u64>,
-    app_pkts:       HashMap<AppProtocol, u64>,
-    app_bytes:      HashMap<AppProtocol, u64>,
-    talker_bytes:   HashMap<IpAddr, u64>,
+    total_packets: u64,
+    total_bytes: u64,
+    proto_pkts: HashMap<L4Protocol, u64>,
+    proto_bytes: HashMap<L4Protocol, u64>,
+    app_pkts: HashMap<AppProtocol, u64>,
+    app_bytes: HashMap<AppProtocol, u64>,
+    talker_bytes: HashMap<IpAddr, u64>,
     talker_packets: HashMap<IpAddr, u64>,
-    rate:           RateTracker,
+    rate: RateTracker,
 }
 
 impl StatsEngine {
     pub fn new() -> Self {
-        Self { inner: Arc::new(RwLock::default()) }
+        Self {
+            inner: Arc::new(RwLock::default()),
+        }
     }
 
     pub fn record(&self, pkt: &ParsedPacket) {
@@ -87,22 +88,22 @@ impl StatsEngine {
         let bytes = pkt.len as u64;
 
         w.total_packets += 1;
-        w.total_bytes   += bytes;
+        w.total_bytes += bytes;
         w.rate.record(bytes);
 
         if let Some(l4) = pkt.l4 {
-            *w.proto_pkts .entry(l4).or_default() += 1;
+            *w.proto_pkts.entry(l4).or_default() += 1;
             *w.proto_bytes.entry(l4).or_default() += bytes;
         }
-        *w.app_pkts .entry(pkt.app).or_default() += 1;
+        *w.app_pkts.entry(pkt.app).or_default() += 1;
         *w.app_bytes.entry(pkt.app).or_default() += bytes;
 
         if let Some(ip) = pkt.src_ip {
-            *w.talker_bytes  .entry(ip).or_default() += bytes;
+            *w.talker_bytes.entry(ip).or_default() += bytes;
             *w.talker_packets.entry(ip).or_default() += 1;
         }
         if let Some(ip) = pkt.dst_ip {
-            *w.talker_bytes  .entry(ip).or_default() += bytes;
+            *w.talker_bytes.entry(ip).or_default() += bytes;
             *w.talker_packets.entry(ip).or_default() += 1;
         }
     }
@@ -118,14 +119,14 @@ impl StatsEngine {
         let (pps, bps) = r.rate.rates();
 
         TrafficSnapshot {
-            captured_at:   Some(Utc::now()),
+            captured_at: Some(Utc::now()),
             total_packets: r.total_packets,
-            total_bytes:   r.total_bytes,
+            total_bytes: r.total_bytes,
             pps,
             bps,
-            top_talkers:   top,
-            proto_dist:    r.proto_pkts.clone(),
-            app_dist:      r.app_pkts.clone(),
+            top_talkers: top,
+            proto_dist: r.proto_pkts.clone(),
+            app_dist: r.app_pkts.clone(),
         }
     }
 
@@ -138,7 +139,7 @@ impl StatsEngine {
         v
     }
 
-    pub fn proto_byte_dist(&self) -> HashMap<L4Protocol,  u64> {
+    pub fn proto_byte_dist(&self) -> HashMap<L4Protocol, u64> {
         self.inner.read().proto_bytes.clone()
     }
 
@@ -148,5 +149,7 @@ impl StatsEngine {
 }
 
 impl Default for StatsEngine {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

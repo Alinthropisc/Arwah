@@ -49,11 +49,21 @@ impl EtherparseDecoder {
                     psh: h.psh,
                     urg: h.urg,
                 };
-                (Some(L4Protocol::Tcp), Some(h.source_port), Some(h.destination_port), fl)
+                (
+                    Some(L4Protocol::Tcp),
+                    Some(h.source_port),
+                    Some(h.destination_port),
+                    fl,
+                )
             }
             Some(TransportSlice::Udp(udp)) => {
                 let h = udp.to_header();
-                (Some(L4Protocol::Udp), Some(h.source_port), Some(h.destination_port), TcpFlags::default())
+                (
+                    Some(L4Protocol::Udp),
+                    Some(h.source_port),
+                    Some(h.destination_port),
+                    TcpFlags::default(),
+                )
             }
             Some(TransportSlice::Icmpv4(_)) => {
                 (Some(L4Protocol::Icmp), None, None, TcpFlags::default())
@@ -69,11 +79,11 @@ impl EtherparseDecoder {
             .unwrap_or(AppProtocol::Unknown);
 
         let payload_len = match &headers.transport {
-            Some(TransportSlice::Tcp(tcp))    => tcp.payload().len(),
-            Some(TransportSlice::Udp(udp))    => udp.payload().len(),
-            Some(TransportSlice::Icmpv4(ic))  => ic.payload().len(),
-            Some(TransportSlice::Icmpv6(ic))  => ic.payload().len(),
-            _                                 => 0,
+            Some(TransportSlice::Tcp(tcp)) => tcp.payload().len(),
+            Some(TransportSlice::Udp(udp)) => udp.payload().len(),
+            Some(TransportSlice::Icmpv4(ic)) => ic.payload().len(),
+            Some(TransportSlice::Icmpv6(ic)) => ic.payload().len(),
+            _ => 0,
         };
 
         Ok(ParsedPacket {

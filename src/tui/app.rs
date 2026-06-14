@@ -4,12 +4,15 @@ use b579_core::capture::CaptureSource;
 use crossterm::{
     event::{EventStream, KeyCode, KeyModifiers},
     execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::{backend::CrosstermBackend, Terminal};
 use std::{io, sync::Arc};
 
-use super::{event::{AppEvent, next_event}, render};
+use super::{
+    event::{AppEvent, next_event},
+    render,
+};
 
 /// Active TUI view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,7 +45,9 @@ pub fn run(interface: Option<&str>, bpf: Option<&str>, tick_ms: u64) -> Result<(
         let session_bg = session.clone();
 
         tokio::spawn(async move {
-            session_bg.run(Box::new(cap) as Box<dyn CaptureSource>).await;
+            session_bg
+                .run(Box::new(cap) as Box<dyn CaptureSource>)
+                .await;
         });
 
         run_tui(session, tick_ms).await

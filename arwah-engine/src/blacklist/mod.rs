@@ -4,15 +4,18 @@
 //! Supports plain IPs (`1.2.3.4`), CIDR ranges (`10.0.0.0/8`),
 //! and domain names (`malware.example.com`).
 
-use b579_core::{alert::{Alert, AlertCategory, Severity}, packet::ParsedPacket};
+use b579_core::{
+    alert::{Alert, AlertCategory, Severity},
+    packet::ParsedPacket,
+};
 use chrono::Utc;
 use ipnet::IpNet;
 use std::{collections::HashSet, fs, net::IpAddr, path::Path, str::FromStr};
 
 #[derive(Default)]
 pub struct Blacklist {
-    ips:     HashSet<IpAddr>,
-    nets:    Vec<IpNet>,
+    ips: HashSet<IpAddr>,
+    nets: Vec<IpNet>,
     domains: HashSet<String>,
 }
 
@@ -21,7 +24,9 @@ impl Blacklist {
         let mut bl = Self::default();
         for line in fs::read_to_string(path)?.lines() {
             let line = line.trim();
-            if line.is_empty() || line.starts_with('#') { continue; }
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
             if let Ok(ip) = IpAddr::from_str(line) {
                 bl.ips.insert(ip);
             } else if let Ok(net) = IpNet::from_str(line) {
@@ -42,7 +47,9 @@ impl Blacklist {
     }
 
     pub fn check_packet(&self, pkt: &ParsedPacket) -> Option<Alert> {
-        let hit = pkt.src_ip.filter(|ip| self.contains_ip(*ip))
+        let hit = pkt
+            .src_ip
+            .filter(|ip| self.contains_ip(*ip))
             .or_else(|| pkt.dst_ip.filter(|ip| self.contains_ip(*ip)))?;
 
         Some(Alert {
@@ -67,10 +74,16 @@ mod tests {
         let mut bl = Blacklist::default();
         for line in s.lines() {
             let line = line.trim();
-            if line.is_empty() || line.starts_with('#') { continue; }
-            if let Ok(ip) = IpAddr::from_str(line)  { bl.ips.insert(ip); }
-            else if let Ok(net) = IpNet::from_str(line) { bl.nets.push(net); }
-            else { bl.domains.insert(line.to_ascii_lowercase()); }
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if let Ok(ip) = IpAddr::from_str(line) {
+                bl.ips.insert(ip);
+            } else if let Ok(net) = IpNet::from_str(line) {
+                bl.nets.push(net);
+            } else {
+                bl.domains.insert(line.to_ascii_lowercase());
+            }
         }
         bl
     }

@@ -1,5 +1,5 @@
 use b579_core::error::{ArwahError, ArwahResult};
-use maxminddb::{geoip2, Reader};
+use maxminddb::{Reader, geoip2};
 use std::{net::IpAddr, path::Path, sync::Arc};
 
 /// GeoIP lookup backed by MaxMind `.mmdb` database files.
@@ -12,10 +12,7 @@ pub struct GeoResolver {
 }
 
 impl GeoResolver {
-    pub fn new(
-        country_path: Option<&Path>,
-        asn_path: Option<&Path>,
-    ) -> ArwahResult<Self> {
+    pub fn new(country_path: Option<&Path>, asn_path: Option<&Path>) -> ArwahResult<Self> {
         let country_db = country_path
             .map(|p| Reader::open_readfile(p).map(|r| Arc::new(r)))
             .transpose()

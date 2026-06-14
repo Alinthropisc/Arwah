@@ -1,8 +1,8 @@
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{BarChart, Block, Borders, List, ListItem},
+    Frame,
 };
 
 use crate::tui::app::AppState;
@@ -26,7 +26,11 @@ pub fn draw(f: &mut Frame, state: &AppState, area: Rect) {
         .collect();
 
     let talkers = List::new(items)
-        .block(Block::default().title(" Top Talkers ").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(" Top Talkers ")
+                .borders(Borders::ALL),
+        )
         .style(Style::default().fg(Color::White));
     f.render_widget(talkers, halves[0]);
 
@@ -40,7 +44,11 @@ pub fn draw(f: &mut Frame, state: &AppState, area: Rect) {
     let bar_refs: Vec<(&str, u64)> = bar_data.iter().map(|(l, v)| (l.as_str(), *v)).collect();
 
     let chart = BarChart::default()
-        .block(Block::default().title(" Protocol Distribution ").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(" Protocol Distribution ")
+                .borders(Borders::ALL),
+        )
         .data(&bar_refs)
         .bar_width(8)
         .bar_gap(2)

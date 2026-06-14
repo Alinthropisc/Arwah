@@ -21,21 +21,21 @@ const EVICT_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
 ///
 /// Wrap in `Arc<CaptureSession>` to share across tasks and the TUI thread.
 pub struct CaptureSession {
-    decoder:      EtherparseDecoder,
+    decoder: EtherparseDecoder,
     pub flow_tracker: Arc<FlowTracker>,
-    pub stats:        Arc<StatsEngine>,
-    pub alerts:       Arc<AlertEngine>,
-    pub tx:           broadcast::Sender<ParsedPacket>,
+    pub stats: Arc<StatsEngine>,
+    pub alerts: Arc<AlertEngine>,
+    pub tx: broadcast::Sender<ParsedPacket>,
 }
 
 impl CaptureSession {
     pub fn new() -> Self {
         let (tx, _) = broadcast::channel(BROADCAST_CAP);
         Self {
-            decoder:      EtherparseDecoder,
+            decoder: EtherparseDecoder,
             flow_tracker: Arc::new(FlowTracker::new()),
-            stats:        Arc::new(StatsEngine::new()),
-            alerts:       Arc::new(AlertEngine::new()),
+            stats: Arc::new(StatsEngine::new()),
+            alerts: Arc::new(AlertEngine::new()),
             tx,
         }
     }
@@ -70,16 +70,25 @@ impl CaptureSession {
             match source.next_packet().await {
                 Ok(Some(raw)) => {
                     let pkt = match self.decoder.decode(&raw) {
-                        Ok(p)  => p,
-                        Err(e) => { tracing::debug!("decode skipped: {e}"); continue; }
+                        Ok(p) => p,
+                        Err(e) => {
+                            tracing::debug!("decode skipped: {e}");
+                            continue;
+                        }
                     };
                     self.stats.record(&pkt);
                     self.flow_tracker.update(&pkt);
                     self.alerts.inspect(&pkt);
                     let _ = self.tx.send(pkt);
                 }
-                Ok(None) => { info!("capture source exhausted"); break; }
-                Err(e)   => { error!("capture error: {e}"); break; }
+                Ok(None) => {
+                    info!("capture source exhausted");
+                    break;
+                }
+                Err(e) => {
+                    error!("capture error: {e}");
+                    break;
+                }
             }
         }
 
@@ -97,5 +106,7 @@ impl CaptureSession {
 }
 
 impl Default for CaptureSession {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

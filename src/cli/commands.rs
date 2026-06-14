@@ -188,9 +188,9 @@ fn run_capture(
 }
 
 fn run_read(file: PathBuf, display_filter: Option<&str>) -> Result<()> {
+    use arwah_engine::filter::DisplayFilter;
     use arwah_engine::{analysis::EtherparseDecoder, capture::PcapFileCapture};
     use b579_core::{capture::CaptureSource, filter::PacketFilter};
-    use arwah_engine::filter::DisplayFilter;
 
     let filter: Option<DisplayFilter> = display_filter
         .map(DisplayFilter::parse)
@@ -307,9 +307,13 @@ fn run_flows(iface: Option<&str>, bpf: Option<&str>, sort: FlowSort) -> Result<(
         let mut flows = session.active_flows();
 
         match sort {
-            FlowSort::Bytes    => flows.sort_unstable_by(|a, b| b.total_bytes().cmp(&a.total_bytes())),
-            FlowSort::Packets  => flows.sort_unstable_by(|a, b| b.total_packets().cmp(&a.total_packets())),
-            FlowSort::Duration => flows.sort_unstable_by(|a, b| b.duration_ms().cmp(&a.duration_ms())),
+            FlowSort::Bytes => flows.sort_unstable_by(|a, b| b.total_bytes().cmp(&a.total_bytes())),
+            FlowSort::Packets => {
+                flows.sort_unstable_by(|a, b| b.total_packets().cmp(&a.total_packets()))
+            }
+            FlowSort::Duration => {
+                flows.sort_unstable_by(|a, b| b.duration_ms().cmp(&a.duration_ms()))
+            }
         }
 
         println!("{:<45} {:<45} {:>10} {:>10}", "SRC", "DST", "BYTES", "PKTS");

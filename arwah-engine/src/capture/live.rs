@@ -11,7 +11,7 @@ use tracing::debug;
 
 /// Live packet capture from a network interface via libpcap.
 pub struct LiveCapture {
-    handle:    Capture<Active>,
+    handle: Capture<Active>,
     interface: String,
 }
 
@@ -37,7 +37,10 @@ impl LiveCapture {
             })?;
 
         debug!(interface, "opened live capture");
-        Ok(Self { handle, interface: interface.to_owned() })
+        Ok(Self {
+            handle,
+            interface: interface.to_owned(),
+        })
     }
 }
 
@@ -62,13 +65,18 @@ impl CaptureSource for LiveCapture {
     }
 
     fn stats(&mut self) -> ArwahResult<CaptureStats> {
-        let s = self.handle.stats().map_err(|e| ArwahError::Capture(e.to_string()))?;
+        let s = self
+            .handle
+            .stats()
+            .map_err(|e| ArwahError::Capture(e.to_string()))?;
         Ok(CaptureStats {
-            received:       s.received as u64,
+            received: s.received as u64,
             dropped_kernel: s.dropped as u64,
-            dropped_iface:  s.if_dropped as u64,
+            dropped_iface: s.if_dropped as u64,
         })
     }
 
-    fn close(self: Box<Self>) { drop(self); }
+    fn close(self: Box<Self>) {
+        drop(self);
+    }
 }

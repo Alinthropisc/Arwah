@@ -1,12 +1,15 @@
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap},
+    Frame,
 };
 
-use super::{app::{AppState, View}, widgets};
+use super::{
+    app::{AppState, View},
+    widgets,
+};
 
 pub fn draw(f: &mut Frame, state: &AppState) {
     let area = f.area();
@@ -14,18 +17,18 @@ pub fn draw(f: &mut Frame, state: &AppState) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // header
-            Constraint::Min(0),     // body
-            Constraint::Length(1),  // status bar
+            Constraint::Length(3), // header
+            Constraint::Min(0),    // body
+            Constraint::Length(1), // status bar
         ])
         .split(area);
 
     draw_header(f, state, chunks[0]);
     match state.view {
         View::Dashboard => widgets::dashboard::draw(f, state, chunks[1]),
-        View::Flows     => widgets::flows::draw(f, state, chunks[1]),
-        View::Packets   => widgets::packets::draw(f, state, chunks[1]),
-        View::Help      => draw_help(f, chunks[1]),
+        View::Flows => widgets::flows::draw(f, state, chunks[1]),
+        View::Packets => widgets::packets::draw(f, state, chunks[1]),
+        View::Help => draw_help(f, chunks[1]),
     }
     draw_statusbar(f, state, chunks[2]);
 }
@@ -87,8 +90,13 @@ fn humanize_bytes(b: u64) -> String {
     const KB: u64 = 1024;
     const MB: u64 = KB * 1024;
     const GB: u64 = MB * 1024;
-    if b >= GB { format!("{:.1}G", b as f64 / GB as f64) }
-    else if b >= MB { format!("{:.1}M", b as f64 / MB as f64) }
-    else if b >= KB { format!("{:.1}K", b as f64 / KB as f64) }
-    else { format!("{b}B") }
+    if b >= GB {
+        format!("{:.1}G", b as f64 / GB as f64)
+    } else if b >= MB {
+        format!("{:.1}M", b as f64 / MB as f64)
+    } else if b >= KB {
+        format!("{:.1}K", b as f64 / KB as f64)
+    } else {
+        format!("{b}B")
+    }
 }

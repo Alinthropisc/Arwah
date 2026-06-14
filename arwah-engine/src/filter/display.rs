@@ -36,7 +36,10 @@ enum FilterPredicate {
 impl DisplayFilter {
     pub fn parse(expr: &str) -> ArwahResult<Self> {
         let predicate = parse_expr(expr.trim())?;
-        Ok(Self { expr: expr.to_owned(), predicate })
+        Ok(Self {
+            expr: expr.to_owned(),
+            predicate,
+        })
     }
 
     pub fn expression(&self) -> &str {
@@ -56,9 +59,7 @@ fn eval(pred: &FilterPredicate, pkt: &ParsedPacket) -> bool {
         FilterPredicate::App(a) => &pkt.app == a,
         FilterPredicate::SrcIp(ip) => pkt.src_ip.as_ref() == Some(ip),
         FilterPredicate::DstIp(ip) => pkt.dst_ip.as_ref() == Some(ip),
-        FilterPredicate::Port(p) => {
-            pkt.src_port == Some(*p) || pkt.dst_port == Some(*p)
-        }
+        FilterPredicate::Port(p) => pkt.src_port == Some(*p) || pkt.dst_port == Some(*p),
         FilterPredicate::SrcPort(p) => pkt.src_port == Some(*p),
         FilterPredicate::DstPort(p) => pkt.dst_port == Some(*p),
         FilterPredicate::And(a, b) => eval(a, pkt) && eval(b, pkt),
