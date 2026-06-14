@@ -55,8 +55,7 @@ impl RotatingPcapWriter {
     }
 
     fn should_rotate(&self, pkt_len: u64) -> bool {
-        self.max_bytes
-            .is_some_and(|max| self.bytes + pkt_len > max)
+        self.max_bytes.is_some_and(|max| self.bytes + pkt_len > max)
             || self
                 .max_secs
                 .is_some_and(|s| self.started_at.elapsed().as_secs() >= s)
