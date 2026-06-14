@@ -16,8 +16,8 @@ use std::{
     collections::HashSet,
     net::IpAddr,
     sync::{
-        atomic::{AtomicU64, Ordering},
         Arc,
+        atomic::{AtomicU64, Ordering},
     },
 };
 use tokio::sync::broadcast;
@@ -210,9 +210,14 @@ struct SuspPort;
 impl Rule for SuspPort {
     fn check(&self, pkt: &ParsedPacket, _: &State) -> Option<Alert> {
         const BAD: &[u16] = &[4444, 31337, 1337, 6667, 9001, 9030, 14433];
-        pkt.dst_port
-            .filter(|p| BAD.contains(p))
-            .map(|p| alert(Severity::Medium, AlertCategory::SuspiciousPort, format!("Suspicious port {p}"), pkt))
+        pkt.dst_port.filter(|p| BAD.contains(p)).map(|p| {
+            alert(
+                Severity::Medium,
+                AlertCategory::SuspiciousPort,
+                format!("Suspicious port {p}"),
+                pkt,
+            )
+        })
     }
 }
 

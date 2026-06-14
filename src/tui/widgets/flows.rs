@@ -1,8 +1,8 @@
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Row, Table, TableState},
-    Frame,
 };
 
 use crate::tui::app::AppState;
@@ -44,7 +44,11 @@ pub fn draw(f: &mut Frame, state: &AppState, area: Rect) {
 
     let table = Table::new(rows, widths)
         .header(header)
-        .block(Block::default().title(" Active Flows ").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(" Active Flows ")
+                .borders(Borders::ALL),
+        )
         .row_highlight_style(Style::default().bg(Color::DarkGray))
         .highlight_symbol("► ");
 

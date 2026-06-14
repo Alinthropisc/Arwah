@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap},
-    Frame,
 };
 
 use super::{
@@ -41,9 +41,11 @@ fn draw_header(f: &mut Frame, state: &AppState, area: ratatui::layout::Rect) {
         humanize_bytes(snap.total_bytes),
         state.session.active_flows().len(),
     );
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+    let block = Block::default().borders(Borders::ALL).style(
+        Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD),
+    );
     let para = Paragraph::new(title).block(block);
     f.render_widget(para, area);
 }

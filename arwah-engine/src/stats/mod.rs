@@ -111,8 +111,7 @@ impl StatsEngine {
     pub fn snapshot(&self) -> TrafficSnapshot {
         let r = self.inner.read();
 
-        let mut top: Vec<(IpAddr, u64)> =
-            r.talker_bytes.iter().map(|(k, v)| (*k, *v)).collect();
+        let mut top: Vec<(IpAddr, u64)> = r.talker_bytes.iter().map(|(k, v)| (*k, *v)).collect();
         top.sort_unstable_by(|a, b| b.1.cmp(&a.1));
         top.truncate(10);
 
@@ -132,8 +131,7 @@ impl StatsEngine {
 
     pub fn top_talkers(&self, n: usize) -> Vec<(IpAddr, u64)> {
         let r = self.inner.read();
-        let mut v: Vec<(IpAddr, u64)> =
-            r.talker_bytes.iter().map(|(k, v)| (*k, *v)).collect();
+        let mut v: Vec<(IpAddr, u64)> = r.talker_bytes.iter().map(|(k, v)| (*k, *v)).collect();
         v.sort_unstable_by(|a, b| b.1.cmp(&a.1));
         v.truncate(n);
         v

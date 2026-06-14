@@ -105,9 +105,10 @@ impl Cli {
             Command::Capture { count, write } => {
                 run_capture(self.interface.as_deref(), self.bpf.as_deref(), count, write)
             }
-            Command::Read { file, display_filter } => {
-                run_read(file, display_filter.as_deref())
-            }
+            Command::Read {
+                file,
+                display_filter,
+            } => run_read(file, display_filter.as_deref()),
             Command::Stats { duration } => {
                 run_stats(self.interface.as_deref(), self.bpf.as_deref(), duration)
             }
@@ -188,13 +189,10 @@ fn run_capture(
 }
 
 fn run_read(file: PathBuf, display_filter: Option<&str>) -> Result<()> {
-    use arwah_engine::filter::DisplayFilter;
-    use arwah_engine::{analysis::EtherparseDecoder, capture::PcapFileCapture};
+    use arwah_engine::{analysis::EtherparseDecoder, capture::PcapFileCapture, filter::DisplayFilter};
     use b579_core::{capture::CaptureSource, filter::PacketFilter};
 
-    let filter: Option<DisplayFilter> = display_filter
-        .map(DisplayFilter::parse)
-        .transpose()?;
+    let filter: Option<DisplayFilter> = display_filter.map(DisplayFilter::parse).transpose()?;
 
     let src = PcapFileCapture::open(&file)?;
     let decoder = EtherparseDecoder;
@@ -221,9 +219,13 @@ fn run_read(file: PathBuf, display_filter: Option<&str>) -> Result<()> {
                         "{} {:?} {}:{} → {}:{} {} bytes",
                         pkt.timestamp.format("%H:%M:%S%.6f"),
                         pkt.l4,
-                        pkt.src_ip.map(|i| i.to_string()).unwrap_or_else(|| "?".into()),
+                        pkt.src_ip
+                            .map(|i| i.to_string())
+                            .unwrap_or_else(|| "?".into()),
                         pkt.src_port.unwrap_or(0),
-                        pkt.dst_ip.map(|i| i.to_string()).unwrap_or_else(|| "?".into()),
+                        pkt.dst_ip
+                            .map(|i| i.to_string())
+                            .unwrap_or_else(|| "?".into()),
                         pkt.dst_port.unwrap_or(0),
                         pkt.len,
                     );

@@ -4,10 +4,7 @@ use crate::{
     stats::StatsEngine,
 };
 use b579_core::{
-    alert::Alert,
-    capture::CaptureSource,
-    flow::FlowRecord,
-    packet::ParsedPacket,
+    alert::Alert, capture::CaptureSource, flow::FlowRecord, packet::ParsedPacket,
     stats::TrafficSnapshot,
 };
 use std::sync::Arc;

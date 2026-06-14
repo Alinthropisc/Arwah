@@ -62,7 +62,15 @@ macro_rules! pattern_detector {
     };
 }
 
-pattern_detector!(HttpDetector, "HTTP", b"GET ", b"POST ", b"HEAD ", b"PUT ", b"HTTP/");
+pattern_detector!(
+    HttpDetector,
+    "HTTP",
+    b"GET ",
+    b"POST ",
+    b"HEAD ",
+    b"PUT ",
+    b"HTTP/"
+);
 pattern_detector!(SshDetector, "SSH", b"SSH-");
 
 struct TlsDetector;
@@ -156,13 +164,25 @@ mod tests {
     #[test]
     fn detects_http() {
         let r = DpiEngine::default_set().inspect(b"GET / HTTP/1.1\r\n", &bare_pkt());
-        assert!(matches!(r, DpiResult::Matched { protocol: "HTTP", .. }));
+        assert!(matches!(
+            r,
+            DpiResult::Matched {
+                protocol: "HTTP",
+                ..
+            }
+        ));
     }
 
     #[test]
     fn detects_tls() {
         let r = DpiEngine::default_set().inspect(&[0x16, 0x03, 0x03, 0, 0], &bare_pkt());
-        assert!(matches!(r, DpiResult::Matched { protocol: "TLS", .. }));
+        assert!(matches!(
+            r,
+            DpiResult::Matched {
+                protocol: "TLS",
+                ..
+            }
+        ));
     }
 
     #[test]

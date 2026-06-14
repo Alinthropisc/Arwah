@@ -22,8 +22,7 @@ unsafe impl Sync for PcapFileCapture {}
 
 impl PcapFileCapture {
     pub fn open(path: &Path) -> ArwahResult<Self> {
-        let handle =
-            Capture::from_file(path).map_err(|e| ArwahError::Capture(e.to_string()))?;
+        let handle = Capture::from_file(path).map_err(|e| ArwahError::Capture(e.to_string()))?;
         debug!(path = %path.display(), "opened pcap file");
         Ok(Self {
             handle,
@@ -56,7 +55,10 @@ impl CaptureSource for PcapFileCapture {
     fn set_bpf_filter(&mut self, expr: &str) -> ArwahResult<()> {
         self.handle
             .filter(expr, true)
-            .map_err(|e| ArwahError::FilterSyntax { pos: 0, msg: e.to_string() })
+            .map_err(|e| ArwahError::FilterSyntax {
+                pos: 0,
+                msg: e.to_string(),
+            })
     }
 
     fn stats(&mut self) -> ArwahResult<CaptureStats> {

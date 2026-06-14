@@ -127,8 +127,8 @@ mod rule {
 
 // ── parser ────────────────────────────────────────────────────────────────────
 mod loader {
-    use super::rule::*;
     use super::SuricataRule;
+    use super::rule::*;
     use std::{fs, path::Path};
 
     pub fn load_rules(path: impl AsRef<Path>) -> std::io::Result<Vec<SuricataRule>> {
@@ -172,8 +172,8 @@ mod loader {
         let sid = extract_opt(opts_raw, "sid")
             .and_then(|v| v.parse().ok())
             .unwrap_or(0);
-        let content = extract_opt(opts_raw, "content")
-            .map(|v| v.trim_matches('"').as_bytes().to_vec());
+        let content =
+            extract_opt(opts_raw, "content").map(|v| v.trim_matches('"').as_bytes().to_vec());
 
         Ok(SuricataRule {
             sid,

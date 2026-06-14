@@ -1,8 +1,8 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{BarChart, Block, Borders, List, ListItem},
-    Frame,
 };
 
 use crate::tui::app::AppState;

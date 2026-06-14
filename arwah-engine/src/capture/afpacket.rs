@@ -72,14 +72,7 @@ impl CaptureSource for AfPacketCapture {
             return Ok(None);
         }
         let mut buf = vec![0u8; 65536];
-        let n = unsafe {
-            libc::recv(
-                self.fd,
-                buf.as_mut_ptr() as *mut libc::c_void,
-                buf.len(),
-                0,
-            )
-        };
+        let n = unsafe { libc::recv(self.fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len(), 0) };
         if n < 0 {
             return Err(ArwahError::Capture("recv() failed".into()));
         }

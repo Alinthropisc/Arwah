@@ -61,7 +61,10 @@ impl CaptureSource for LiveCapture {
     fn set_bpf_filter(&mut self, expr: &str) -> ArwahResult<()> {
         self.handle
             .filter(expr, true)
-            .map_err(|e| ArwahError::FilterSyntax { pos: 0, msg: e.to_string() })
+            .map_err(|e| ArwahError::FilterSyntax {
+                pos: 0,
+                msg: e.to_string(),
+            })
     }
 
     fn stats(&mut self) -> ArwahResult<CaptureStats> {
