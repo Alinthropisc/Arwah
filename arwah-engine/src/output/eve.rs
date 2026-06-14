@@ -6,11 +6,7 @@ use b579_core::{
     protocol::L4Protocol,
 };
 use serde::Serialize;
-use std::{
-    io::{BufWriter, Write},
-    net::IpAddr,
-    path::Path,
-};
+use std::{net::IpAddr, path::Path};
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 
 fn proto_str(proto: L4Protocol) -> &'static str {
@@ -21,6 +17,7 @@ fn proto_str(proto: L4Protocol) -> &'static str {
         L4Protocol::IcmpV6 => "IPv6-ICMP",
         L4Protocol::Sctp  => "SCTP",
         L4Protocol::Other(_) => "unknown",
+        _ => "unknown",
     }
 }
 
@@ -31,6 +28,7 @@ fn severity_num(s: Severity) -> u8 {
         Severity::Medium   => 3,
         Severity::High     => 2,
         Severity::Critical => 1,
+        _                  => 3,
     }
 }
 
@@ -40,6 +38,7 @@ fn flow_state_str(s: FlowState) -> &'static str {
         FlowState::Established => "established",
         FlowState::Closing     => "closing",
         FlowState::Closed      => "closed",
+        _                      => "unknown",
     }
 }
 

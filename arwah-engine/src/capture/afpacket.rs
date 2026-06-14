@@ -44,7 +44,7 @@ impl CaptureSource for AfPacketCapture {
         Ok(Some(RawPacket { timestamp: Utc::now(), interface: self.interface.clone(), data: buf.into_boxed_slice() }))
     }
     fn set_bpf_filter(&mut self, _: &str) -> ArwahResult<()> { Ok(()) }
-    fn stats(&self) -> ArwahResult<CaptureStats> { Ok(CaptureStats::default()) }
+    fn stats(&mut self) -> ArwahResult<CaptureStats> { Ok(CaptureStats::default()) }
     fn close(mut self: Box<Self>) { if !self.closed { unsafe { libc::close(self.fd) }; self.closed = true; } }
 }
 

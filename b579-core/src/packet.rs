@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use ipnet::IpNet;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 

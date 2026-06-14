@@ -68,7 +68,13 @@ impl EtherparseDecoder {
             .map(AppProtocol::from_port)
             .unwrap_or(AppProtocol::Unknown);
 
-        let payload_len = headers.payload.slice().len();
+        let payload_len = match &headers.transport {
+            Some(TransportSlice::Tcp(tcp))    => tcp.payload().len(),
+            Some(TransportSlice::Udp(udp))    => udp.payload().len(),
+            Some(TransportSlice::Icmpv4(ic))  => ic.payload().len(),
+            Some(TransportSlice::Icmpv6(ic))  => ic.payload().len(),
+            _                                 => 0,
+        };
 
         Ok(ParsedPacket {
             timestamp: raw.timestamp,
