@@ -7,15 +7,29 @@ use b579_core::{
 };
 use chrono::Utc;
 use dashmap::DashMap;
-use std::{net::IpAddr, sync::{Arc, atomic::{AtomicU64, Ordering}}};
+use std::{
+    collections::HashSet,
+    net::IpAddr,
+    sync::{Arc, atomic::{AtomicU64, Ordering}},
+};
 use tokio::sync::broadcast;
 
 const CAP: usize = 512;
 
 trait Rule: Send + Sync { fn check(&self, pkt: &ParsedPacket, s: &State) -> Option<Alert>; }
 
+/// per-(src,dst) set of unique dst ports — vertical scan
+type VerticalMap = DashMap<(IpAddr, IpAddr), HashSet<u16>>;
+/// per-(src,port) set of unique dst IPs — horizontal scan
+type HorizontalMap = DashMap<(IpAddr, u16), HashSet<IpAddr>>;
+
 #[derive(Default)]
-struct State { syn: DashMap<IpAddr, u64>, icmp: DashMap<IpAddr, u64> }
+struct State {
+    syn:        DashMap<IpAddr, u64>,
+    icmp:       DashMap<IpAddr, u64>,
+    vert_scan:  VerticalMap,
+    horiz_scan: HorizontalMap,
+}
 
 pub struct AlertEngine {
     rules: Vec<Box<dyn Rule>>,
@@ -29,10 +43,12 @@ impl AlertEngine {
         let (tx, _) = broadcast::channel(CAP);
         Self {
             rules: vec![
-                Box::new(SynFlood   { threshold: 200 }),
-                Box::new(IcmpFlood  { threshold: 500 }),
+                Box::new(SynFlood      { threshold: 200 }),
+                Box::new(IcmpFlood     { threshold: 500 }),
                 Box::new(BadTtl),
                 Box::new(SuspPort),
+                Box::new(VerticalScan  { threshold: 20 }),
+                Box::new(HorizontalScan{ threshold: 15 }),
             ],
             state: Arc::new(State::default()),
             tx, seq: AtomicU64::new(1),
@@ -50,7 +66,12 @@ impl AlertEngine {
         }
     }
 
-    pub fn reset(&self) { self.state.syn.clear(); self.state.icmp.clear(); }
+    pub fn reset(&self) {
+        self.state.syn.clear();
+        self.state.icmp.clear();
+        self.state.vert_scan.clear();
+        self.state.horiz_scan.clear();
+    }
 }
 
 impl Default for AlertEngine { fn default() -> Self { Self::new() } }
@@ -100,5 +121,39 @@ impl Rule for SuspPort {
             .filter(|p| BAD.contains(p))
             .map(|p| alert(Severity::Medium, AlertCategory::SuspiciousPort,
                 format!("Suspicious port {p}"), pkt))
+    }
+}
+
+/// Vertical scan: one src probes many ports on the same dst.
+struct VerticalScan { threshold: usize }
+impl Rule for VerticalScan {
+    fn check(&self, pkt: &ParsedPacket, s: &State) -> Option<Alert> {
+        let src = pkt.src_ip?;
+        let dst = pkt.dst_ip?;
+        let port = pkt.dst_port?;
+        let mut entry = s.vert_scan.entry((src, dst)).or_default();
+        entry.insert(port);
+        let count = entry.len();
+        (count == self.threshold).then(|| alert(
+            Severity::High, AlertCategory::PortScan,
+            format!("Vertical port scan: {src} → {dst}, {count} ports"), pkt,
+        ))
+    }
+}
+
+/// Horizontal scan: one src probes the same port across many hosts.
+struct HorizontalScan { threshold: usize }
+impl Rule for HorizontalScan {
+    fn check(&self, pkt: &ParsedPacket, s: &State) -> Option<Alert> {
+        let src  = pkt.src_ip?;
+        let dst  = pkt.dst_ip?;
+        let port = pkt.dst_port?;
+        let mut entry = s.horiz_scan.entry((src, port)).or_default();
+        entry.insert(dst);
+        let count = entry.len();
+        (count == self.threshold).then(|| alert(
+            Severity::High, AlertCategory::PortScan,
+            format!("Horizontal port scan: {src} port {port} → {count} hosts"), pkt,
+        ))
     }
 }

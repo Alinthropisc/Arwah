@@ -26,6 +26,8 @@ maxminddb     = { workspace = true }
 dns-lookup    = { workspace = true }
 async-trait   = "0.1"
 bytes         = "1.10"
+serde_json    = { workspace = true }
+libc          = "0.2"
 
 [dev-dependencies]
 rstest = { workspace = true }

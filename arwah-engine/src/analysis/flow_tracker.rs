@@ -7,7 +7,18 @@ use chrono::Utc;
 use dashmap::DashMap;
 use std::sync::Arc;
 
-const FLOW_TIMEOUT_SECS: i64 = 120;
+fn flow_timeout(protocol: L4Protocol, state: &FlowState) -> i64 {
+    match protocol {
+        L4Protocol::Tcp => match state {
+            FlowState::New         => 60,
+            FlowState::Established => 300,
+            FlowState::Closing | FlowState::Closed => 15,
+        },
+        L4Protocol::Udp   => 30,
+        L4Protocol::Icmp | L4Protocol::IcmpV6 => 10,
+        _ => 120,
+    }
+}
 
 /// Lock-free concurrent flow tracking table.
 ///
@@ -71,10 +82,14 @@ impl FlowTracker {
         Some(entry.clone())
     }
 
-    /// Evict flows that have been idle longer than `FLOW_TIMEOUT_SECS`.
+    /// Evict flows that have been idle past their per-protocol timeout.
     pub fn evict_stale(&self) {
-        let cutoff = Utc::now() - chrono::Duration::seconds(FLOW_TIMEOUT_SECS);
-        self.flows.retain(|_, v| v.last_seen > cutoff);
+        let now = Utc::now();
+        self.flows.retain(|_, v| {
+            let timeout = flow_timeout(v.key.protocol, &v.state);
+            let cutoff = now - chrono::Duration::seconds(timeout);
+            v.last_seen > cutoff
+        });
     }
 
     pub fn active_count(&self) -> usize {
