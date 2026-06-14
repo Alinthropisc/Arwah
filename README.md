@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="resources/logos/raw/icon.png" alt="Arwah Logo" width="120"/>
+<img src="art/815d5ab1b4699ee0085b9d1ddd1a0ac0-removebg-preview.png" alt="Arwah Logo" width="120"/>
 
 # Arwah
 
