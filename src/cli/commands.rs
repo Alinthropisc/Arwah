@@ -122,7 +122,7 @@ impl Cli {
 fn list_interfaces() {
     match pcap::Device::list() {
         Ok(devices) => {
-            println!("{:<20} {}", "INTERFACE", "DESCRIPTION");
+            println!("{:<20} DESCRIPTION", "INTERFACE");
             println!("{}", "-".repeat(60));
             for dev in devices {
                 println!("{:<20} {}", dev.name, dev.desc.unwrap_or_default());
@@ -204,36 +204,31 @@ fn run_read(file: PathBuf, display_filter: Option<&str>) -> Result<()> {
         let mut src = Box::new(src) as Box<dyn CaptureSource>;
         let mut count = 0u64;
 
-        loop {
-            match src.next_packet().await? {
-                Some(raw) => {
-                    let pkt = match decoder.decode(&raw) {
-                        Ok(p) => p,
-                        Err(_) => continue,
-                    };
-                    if let Some(ref f) = filter {
-                        if !f.matches(&pkt) {
-                            continue;
-                        }
-                    }
-                    count += 1;
-                    println!(
-                        "{} {:?} {}:{} → {}:{} {} bytes",
-                        pkt.timestamp.format("%H:%M:%S%.6f"),
-                        pkt.l4,
-                        pkt.src_ip
-                            .map(|i| i.to_string())
-                            .unwrap_or_else(|| "?".into()),
-                        pkt.src_port.unwrap_or(0),
-                        pkt.dst_ip
-                            .map(|i| i.to_string())
-                            .unwrap_or_else(|| "?".into()),
-                        pkt.dst_port.unwrap_or(0),
-                        pkt.len,
-                    );
-                }
-                None => break,
+        while let Some(raw) = src.next_packet().await? {
+            let pkt = match decoder.decode(&raw) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if let Some(ref f) = filter
+                && !f.matches(&pkt)
+            {
+                continue;
             }
+            count += 1;
+            println!(
+                "{} {:?} {}:{} → {}:{} {} bytes",
+                pkt.timestamp.format("%H:%M:%S%.6f"),
+                pkt.l4,
+                pkt.src_ip
+                    .map(|i| i.to_string())
+                    .unwrap_or_else(|| "?".into()),
+                pkt.src_port.unwrap_or(0),
+                pkt.dst_ip
+                    .map(|i| i.to_string())
+                    .unwrap_or_else(|| "?".into()),
+                pkt.dst_port.unwrap_or(0),
+                pkt.len,
+            );
         }
         println!("\n{count} packets");
         Ok::<_, anyhow::Error>(())
@@ -277,10 +272,10 @@ fn run_stats(iface: Option<&str>, bpf: Option<&str>, duration: u64) -> Result<()
                 snap.total_bytes,
                 session.active_flows().len()
             );
-            if let Some(dl) = deadline {
-                if tokio::time::Instant::now() >= dl {
-                    break;
-                }
+            if let Some(dl) = deadline
+                && tokio::time::Instant::now() >= dl
+            {
+                break;
             }
         }
         Ok::<_, anyhow::Error>(())
@@ -311,12 +306,14 @@ fn run_flows(iface: Option<&str>, bpf: Option<&str>, sort: FlowSort) -> Result<(
         let mut flows = session.active_flows();
 
         match sort {
-            FlowSort::Bytes => flows.sort_unstable_by(|a, b| b.total_bytes().cmp(&a.total_bytes())),
+            FlowSort::Bytes => {
+                flows.sort_unstable_by_key(|b| std::cmp::Reverse(b.total_bytes()))
+            }
             FlowSort::Packets => {
-                flows.sort_unstable_by(|a, b| b.total_packets().cmp(&a.total_packets()))
+                flows.sort_unstable_by_key(|b| std::cmp::Reverse(b.total_packets()))
             }
             FlowSort::Duration => {
-                flows.sort_unstable_by(|a, b| b.duration_ms().cmp(&a.duration_ms()))
+                flows.sort_unstable_by_key(|b| std::cmp::Reverse(b.duration_ms()))
             }
         }
 

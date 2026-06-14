@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 /// Format and print a serializable value according to the chosen format.
+#[allow(dead_code)]
 pub fn print_json<T: Serialize>(value: &T) {
     println!(
         "{}",

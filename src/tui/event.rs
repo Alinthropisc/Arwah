@@ -6,8 +6,7 @@ use std::time::Duration;
 pub enum AppEvent {
     Tick,
     Key(KeyEvent),
-    Resize(u16, u16),
-    PacketUpdate,
+    Resize,
 }
 
 pub async fn next_event(stream: &mut EventStream, tick_ms: u64) -> Option<AppEvent> {
@@ -17,7 +16,7 @@ pub async fn next_event(stream: &mut EventStream, tick_ms: u64) -> Option<AppEve
         maybe_ev = stream.next() => {
             match maybe_ev? {
                 Ok(Event::Key(k)) => Some(AppEvent::Key(k)),
-                Ok(Event::Resize(w, h)) => Some(AppEvent::Resize(w, h)),
+                Ok(Event::Resize(..)) => Some(AppEvent::Resize),
                 _ => None,
             }
         }

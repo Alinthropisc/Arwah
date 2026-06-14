@@ -84,8 +84,8 @@ async fn run_tui(session: Arc<CaptureSession>, tick_ms: u64) -> Result<()> {
 }
 
 fn handle_event(state: &mut AppState, ev: AppEvent) {
-    match ev {
-        AppEvent::Key(k) => match (k.modifiers, k.code) {
+    if let AppEvent::Key(k) = ev {
+        match (k.modifiers, k.code) {
             (KeyModifiers::NONE, KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
                 state.should_quit = true;
@@ -95,8 +95,7 @@ fn handle_event(state: &mut AppState, ev: AppEvent) {
             (KeyModifiers::NONE, KeyCode::Char('3')) => state.view = View::Packets,
             (KeyModifiers::NONE, KeyCode::Char('?')) => state.view = View::Help,
             _ => {}
-        },
-        _ => {}
+        }
     }
 }
 

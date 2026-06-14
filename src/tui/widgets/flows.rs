@@ -1,3 +1,5 @@
+use std::cmp::Reverse;
+
 use ratatui::{
     Frame,
     layout::Rect,
@@ -9,7 +11,7 @@ use crate::tui::app::AppState;
 
 pub fn draw(f: &mut Frame, state: &AppState, area: Rect) {
     let mut flows = state.session.active_flows();
-    flows.sort_unstable_by(|a, b| b.total_bytes().cmp(&a.total_bytes()));
+    flows.sort_unstable_by_key(|b| Reverse(b.total_bytes()));
 
     let header_style = Style::default()
         .fg(Color::Cyan)

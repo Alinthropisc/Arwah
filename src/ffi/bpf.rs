@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 /// Mirrors `BpfInsn` in bpf/bpf.h.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Default)]

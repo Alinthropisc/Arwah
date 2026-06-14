@@ -1,4 +1,5 @@
 //! Safe Rust wrappers over the C23 protocol dissectors in proto/.
+#![allow(dead_code)]
 
 use std::ffi::CStr;
 
