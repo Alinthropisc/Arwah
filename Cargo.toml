@@ -32,7 +32,7 @@ anyhow    = "1.0"
 
 # IP / network utilities
 ipnet      = "2.12"
-maxminddb  = "0.27"
+maxminddb  = "0.24"
 dns-lookup = "3.0"
 
 # CLI

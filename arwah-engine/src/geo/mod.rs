@@ -29,14 +29,14 @@ impl GeoResolver {
     /// Returns the ISO-3166 country code for `ip`, if available.
     pub fn country_code(&self, ip: IpAddr) -> Option<String> {
         let db = self.country_db.as_ref()?;
-        let record: geoip2::Country = db.lookup(ip).ok()?.record;
+        let record: geoip2::Country = db.lookup(ip).ok()?;
         record.country?.iso_code.map(str::to_owned)
     }
 
     /// Returns the ASN organisation name for `ip`, if available.
     pub fn asn_org(&self, ip: IpAddr) -> Option<String> {
         let db = self.asn_db.as_ref()?;
-        let record: geoip2::Asn = db.lookup(ip).ok()?.record;
+        let record: geoip2::Asn = db.lookup(ip).ok()?;
         record.autonomous_system_organization.map(str::to_owned)
     }
 }

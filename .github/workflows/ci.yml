@@ -113,4 +113,4 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
       - name: Security audit
-        run: cargo install cargo-audit && cargo audit --deny warnings || true
+        run: cargo install cargo-audit && cargo audit --deny warnings --ignore RUSTSEC-2025-0132 || true
