@@ -23,10 +23,7 @@ impl HalfStream {
 
     fn drain(&mut self) -> Vec<u8> {
         let mut out = Vec::new();
-        loop {
-            let Some((&seq, _)) = self.segments.iter().next() else {
-                break;
-            };
+        while let Some((&seq, _)) = self.segments.iter().next() {
             if seq > self.next_seq {
                 break;
             }
@@ -94,6 +91,10 @@ impl StreamTable {
 
     pub fn len(&self) -> usize {
         self.streams.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.streams.is_empty()
     }
 }
 

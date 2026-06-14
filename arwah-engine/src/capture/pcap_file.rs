@@ -38,7 +38,7 @@ impl CaptureSource for PcapFileCapture {
             Ok(pkt) => {
                 let ts = pkt.header.ts;
                 let timestamp = Utc
-                    .timestamp_opt(ts.tv_sec as i64, ts.tv_usec as u32 * 1000)
+                    .timestamp_opt(ts.tv_sec, ts.tv_usec as u32 * 1000)
                     .single()
                     .unwrap_or_else(Utc::now);
                 Ok(Some(RawPacket {

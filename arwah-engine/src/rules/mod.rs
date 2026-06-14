@@ -119,7 +119,7 @@ mod rule {
             match self {
                 Self::Any => true,
                 Self::Port(p) => port == Some(*p),
-                Self::Range(lo, hi) => port.map_or(false, |p| p >= *lo && p <= *hi),
+                Self::Range(lo, hi) => port.is_some_and(|p| p >= *lo && p <= *hi),
             }
         }
     }
@@ -210,10 +210,10 @@ mod loader {
         if let Ok(p) = s.parse::<u16>() {
             return PortMatch::Port(p);
         }
-        if let Some((lo, hi)) = s.split_once(':') {
-            if let (Ok(l), Ok(h)) = (lo.parse(), hi.parse()) {
-                return PortMatch::Range(l, h);
-            }
+        if let Some((lo, hi)) = s.split_once(':')
+            && let (Ok(l), Ok(h)) = (lo.parse(), hi.parse())
+        {
+            return PortMatch::Range(l, h);
         }
         PortMatch::Any
     }

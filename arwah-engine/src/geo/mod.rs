@@ -14,12 +14,12 @@ pub struct GeoResolver {
 impl GeoResolver {
     pub fn new(country_path: Option<&Path>, asn_path: Option<&Path>) -> ArwahResult<Self> {
         let country_db = country_path
-            .map(|p| Reader::open_readfile(p).map(|r| Arc::new(r)))
+            .map(|p| Reader::open_readfile(p).map(Arc::new))
             .transpose()
             .map_err(|e| ArwahError::GeoLookup(e.to_string()))?;
 
         let asn_db = asn_path
-            .map(|p| Reader::open_readfile(p).map(|r| Arc::new(r)))
+            .map(|p| Reader::open_readfile(p).map(Arc::new))
             .transpose()
             .map_err(|e| ArwahError::GeoLookup(e.to_string()))?;
 

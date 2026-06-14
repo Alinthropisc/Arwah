@@ -112,7 +112,7 @@ impl StatsEngine {
         let r = self.inner.read();
 
         let mut top: Vec<(IpAddr, u64)> = r.talker_bytes.iter().map(|(k, v)| (*k, *v)).collect();
-        top.sort_unstable_by(|a, b| b.1.cmp(&a.1));
+        top.sort_unstable_by_key(|b| std::cmp::Reverse(b.1));
         top.truncate(10);
 
         let (pps, bps) = r.rate.rates();
@@ -132,7 +132,7 @@ impl StatsEngine {
     pub fn top_talkers(&self, n: usize) -> Vec<(IpAddr, u64)> {
         let r = self.inner.read();
         let mut v: Vec<(IpAddr, u64)> = r.talker_bytes.iter().map(|(k, v)| (*k, *v)).collect();
-        v.sort_unstable_by(|a, b| b.1.cmp(&a.1));
+        v.sort_unstable_by_key(|b| std::cmp::Reverse(b.1));
         v.truncate(n);
         v
     }

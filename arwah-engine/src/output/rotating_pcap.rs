@@ -56,10 +56,10 @@ impl RotatingPcapWriter {
 
     fn should_rotate(&self, pkt_len: u64) -> bool {
         self.max_bytes
-            .map_or(false, |max| self.bytes + pkt_len > max)
+            .is_some_and(|max| self.bytes + pkt_len > max)
             || self
                 .max_secs
-                .map_or(false, |s| self.started_at.elapsed().as_secs() >= s)
+                .is_some_and(|s| self.started_at.elapsed().as_secs() >= s)
     }
 
     pub fn write(&mut self, pkt: &RawPacket) -> Result<(), pcap::Error> {
