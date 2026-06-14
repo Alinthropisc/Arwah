@@ -189,7 +189,9 @@ fn run_capture(
 }
 
 fn run_read(file: PathBuf, display_filter: Option<&str>) -> Result<()> {
-    use arwah_engine::{analysis::EtherparseDecoder, capture::PcapFileCapture, filter::DisplayFilter};
+    use arwah_engine::{
+        analysis::EtherparseDecoder, capture::PcapFileCapture, filter::DisplayFilter,
+    };
     use b579_core::{capture::CaptureSource, filter::PacketFilter};
 
     let filter: Option<DisplayFilter> = display_filter.map(DisplayFilter::parse).transpose()?;

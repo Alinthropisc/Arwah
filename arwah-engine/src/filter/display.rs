@@ -168,7 +168,11 @@ mod tests {
     use b579_core::protocol::{AppProtocol, L3Protocol, L4Protocol};
     use chrono::Utc;
 
-    fn make_packet(l4: Option<L4Protocol>, app: AppProtocol, dst_port: Option<u16>) -> ParsedPacket {
+    fn make_packet(
+        l4: Option<L4Protocol>,
+        app: AppProtocol,
+        dst_port: Option<u16>,
+    ) -> ParsedPacket {
         ParsedPacket {
             timestamp: Utc::now(),
             interface: "eth0".into(),
