@@ -3,19 +3,17 @@ use b579_core::{
     packet::{ParsedPacket, RawPacket, TcpFlags},
     protocol::{AppProtocol, L3Protocol, L4Protocol},
 };
-use chrono::Utc;
-use etherparse::{NetSlice, PacketHeaders, TransportSlice};
+use etherparse::{NetSlice, SlicedPacket, TransportSlice};
 
 /// Stateless packet decoder backed by the `etherparse` library.
 ///
-/// Implements zero-copy slice-based parsing — no heap allocation for the
-/// packet payload itself.
+/// Zero-copy slice-based parsing — no heap allocation for the packet payload.
 #[derive(Debug, Default)]
 pub struct EtherparseDecoder;
 
 impl EtherparseDecoder {
     pub fn decode(&self, raw: &RawPacket) -> ArwahResult<ParsedPacket> {
-        let headers = PacketHeaders::from_ethernet_slice(&raw.data)
+        let headers = SlicedPacket::from_ethernet(&raw.data)
             .map_err(|e| ArwahError::Dissection(e.to_string()))?;
 
         let (l3, src_ip, dst_ip, ttl) = match &headers.net {
@@ -25,7 +23,7 @@ impl EtherparseDecoder {
                     L3Protocol::IPv4,
                     Some(std::net::IpAddr::V4(h.source_addr())),
                     Some(std::net::IpAddr::V4(h.destination_addr())),
-                    Some(h.time_to_live()),
+                    Some(h.ttl()),
                 )
             }
             Some(NetSlice::Ipv6(ip)) => {
@@ -51,21 +49,11 @@ impl EtherparseDecoder {
                     psh: h.psh,
                     urg: h.urg,
                 };
-                (
-                    Some(L4Protocol::Tcp),
-                    Some(h.source_port),
-                    Some(h.destination_port),
-                    fl,
-                )
+                (Some(L4Protocol::Tcp), Some(h.source_port), Some(h.destination_port), fl)
             }
             Some(TransportSlice::Udp(udp)) => {
                 let h = udp.to_header();
-                (
-                    Some(L4Protocol::Udp),
-                    Some(h.source_port),
-                    Some(h.destination_port),
-                    TcpFlags::default(),
-                )
+                (Some(L4Protocol::Udp), Some(h.source_port), Some(h.destination_port), TcpFlags::default())
             }
             Some(TransportSlice::Icmpv4(_)) => {
                 (Some(L4Protocol::Icmp), None, None, TcpFlags::default())
@@ -80,7 +68,7 @@ impl EtherparseDecoder {
             .map(AppProtocol::from_port)
             .unwrap_or(AppProtocol::Unknown);
 
-        let payload_len = headers.payload.len();
+        let payload_len = headers.payload.slice().len();
 
         Ok(ParsedPacket {
             timestamp: raw.timestamp,

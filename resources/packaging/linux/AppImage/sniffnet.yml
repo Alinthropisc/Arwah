@@ -1,4 +1,4 @@
-app: Sniffnet
+app: Arwah
 ingredients:
   dist: buster
   packages:

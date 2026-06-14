@@ -1,16 +1,13 @@
 //! IP and domain blacklist loaded from a flat text file.
 //!
 //! One entry per line. Lines starting with `#` are ignored.
-//! Supports plain IPs (`1.2.3.4`), CIDR ranges (`10.0.0.0/8`), and domain
-//! names (`malware.example.com`).
+//! Supports plain IPs (`1.2.3.4`), CIDR ranges (`10.0.0.0/8`),
+//! and domain names (`malware.example.com`).
 
 use b579_core::{alert::{Alert, AlertCategory, Severity}, packet::ParsedPacket};
 use chrono::Utc;
 use ipnet::IpNet;
-use std::{
-    collections::HashSet,
-    fs, net::IpAddr, path::Path, str::FromStr,
-};
+use std::{collections::HashSet, fs, net::IpAddr, path::Path, str::FromStr};
 
 #[derive(Default)]
 pub struct Blacklist {
@@ -22,8 +19,7 @@ pub struct Blacklist {
 impl Blacklist {
     pub fn from_file(path: impl AsRef<Path>) -> std::io::Result<Self> {
         let mut bl = Self::default();
-        let text = fs::read_to_string(path)?;
-        for line in text.lines() {
+        for line in fs::read_to_string(path)?.lines() {
             let line = line.trim();
             if line.is_empty() || line.starts_with('#') { continue; }
             if let Ok(ip) = IpAddr::from_str(line) {
@@ -46,38 +42,33 @@ impl Blacklist {
     }
 
     pub fn check_packet(&self, pkt: &ParsedPacket) -> Option<Alert> {
-        let hit_ip = pkt.src_ip.filter(|ip| self.contains_ip(*ip))
-            .or_else(|| pkt.dst_ip.filter(|ip| self.contains_ip(*ip)));
+        let hit = pkt.src_ip.filter(|ip| self.contains_ip(*ip))
+            .or_else(|| pkt.dst_ip.filter(|ip| self.contains_ip(*ip)))?;
 
-        if let Some(ip) = hit_ip {
-            return Some(Alert {
-                id: 0,
-                timestamp: Utc::now(),
-                severity: Severity::Critical,
-                category: AlertCategory::SuspiciousPort,
-                message: format!("Blacklisted IP: {ip}"),
-                src_ip: pkt.src_ip,
-                dst_ip: pkt.dst_ip,
-                src_port: pkt.src_port,
-                dst_port: pkt.dst_port,
-            });
-        }
-
-        None
+        Some(Alert {
+            id: 0,
+            timestamp: Utc::now(),
+            severity: Severity::Critical,
+            category: AlertCategory::SuspiciousPort,
+            message: format!("Blacklisted IP: {hit}"),
+            src_ip: pkt.src_ip,
+            dst_ip: pkt.dst_ip,
+            src_port: pkt.src_port,
+            dst_port: pkt.dst_port,
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::IpAddr;
 
     fn bl_from_str(s: &str) -> Blacklist {
         let mut bl = Blacklist::default();
         for line in s.lines() {
             let line = line.trim();
             if line.is_empty() || line.starts_with('#') { continue; }
-            if let Ok(ip) = IpAddr::from_str(line) { bl.ips.insert(ip); }
+            if let Ok(ip) = IpAddr::from_str(line)  { bl.ips.insert(ip); }
             else if let Ok(net) = IpNet::from_str(line) { bl.nets.push(net); }
             else { bl.domains.insert(line.to_ascii_lowercase()); }
         }

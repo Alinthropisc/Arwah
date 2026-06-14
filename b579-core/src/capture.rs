@@ -19,7 +19,7 @@ pub trait CaptureSource: Send + Sync {
     fn set_bpf_filter(&mut self, expr: &str) -> ArwahResult<()>;
 
     /// Query kernel-level capture statistics (received / dropped).
-    fn stats(&self) -> ArwahResult<CaptureStats>;
+    fn stats(&mut self) -> ArwahResult<CaptureStats>;
 
     /// Cleanly close the capture source and release kernel resources.
     fn close(self: Box<Self>);

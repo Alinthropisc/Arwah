@@ -9,6 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: full
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   # ── unit tests ───────────────────────────────────────────────────────────────
@@ -74,7 +75,7 @@ jobs:
       - name: Run doc tests
         run: cargo test --workspace --doc
 
-  # ── coverage (optional, non-blocking) ───────────────────────────────────────
+  # ── coverage (non-blocking) ──────────────────────────────────────────────────
   coverage:
     name: Coverage
     runs-on: ubuntu-latest

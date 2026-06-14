@@ -1,4 +1,4 @@
-### Custom themes for Sniffnet
+### Custom themes for Arwah
 
 Custom theme file structure:
 ```toml
@@ -10,5 +10,3 @@ text_body = "#c6d0f5"         # body text color
 text_headers = "#232634"      # header and footer text color
 starred = "#e5c890"           # favorites' star color
 ```
-
-For more information, refer to the [Custom themes](https://github.com/GyulyVGC/sniffnet/wiki/Custom-themes) page in the wiki.

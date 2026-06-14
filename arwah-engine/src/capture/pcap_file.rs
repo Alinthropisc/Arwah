@@ -13,8 +13,12 @@ use tracing::debug;
 /// Replay packets from an existing `.pcap` / `.pcapng` file.
 pub struct PcapFileCapture {
     handle: Capture<Offline>,
-    path: String,
+    path:   String,
 }
+
+// SAFETY: Capture<Offline> wraps *mut pcap_t. All ops require &mut self.
+unsafe impl Send for PcapFileCapture {}
+unsafe impl Sync for PcapFileCapture {}
 
 impl PcapFileCapture {
     pub fn open(path: &Path) -> ArwahResult<Self> {
@@ -31,10 +35,8 @@ impl CaptureSource for PcapFileCapture {
         match self.handle.next_packet() {
             Ok(pkt) => {
                 let ts = pkt.header.ts;
-                let secs = ts.tv_sec as i64;
-                let micros = ts.tv_usec as u32;
                 let timestamp = Utc
-                    .timestamp_opt(secs, micros * 1000)
+                    .timestamp_opt(ts.tv_sec as i64, ts.tv_usec as u32 * 1000)
                     .single()
                     .unwrap_or_else(Utc::now);
                 Ok(Some(RawPacket {
@@ -54,12 +56,9 @@ impl CaptureSource for PcapFileCapture {
             .map_err(|e| ArwahError::FilterSyntax { pos: 0, msg: e.to_string() })
     }
 
-    fn stats(&self) -> ArwahResult<CaptureStats> {
-        // Offline captures don't expose kernel stats.
+    fn stats(&mut self) -> ArwahResult<CaptureStats> {
         Ok(CaptureStats::default())
     }
 
-    fn close(self: Box<Self>) {
-        drop(self);
-    }
+    fn close(self: Box<Self>) { drop(self); }
 }
