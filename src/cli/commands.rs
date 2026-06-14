@@ -306,9 +306,7 @@ fn run_flows(iface: Option<&str>, bpf: Option<&str>, sort: FlowSort) -> Result<(
         let mut flows = session.active_flows();
 
         match sort {
-            FlowSort::Bytes => {
-                flows.sort_unstable_by_key(|b| std::cmp::Reverse(b.total_bytes()))
-            }
+            FlowSort::Bytes => flows.sort_unstable_by_key(|b| std::cmp::Reverse(b.total_bytes())),
             FlowSort::Packets => {
                 flows.sort_unstable_by_key(|b| std::cmp::Reverse(b.total_packets()))
             }
