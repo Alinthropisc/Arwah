@@ -82,14 +82,22 @@ impl FlowTracker {
         Some(entry.clone())
     }
 
-    /// Evict flows that have been idle past their per-protocol timeout.
-    pub fn evict_stale(&self) {
+    /// Evict flows idle past their per-protocol timeout; returns evicted records
+    /// so callers can run FlowRule checks on them.
+    pub fn evict_stale(&self) -> Vec<FlowRecord> {
         let now = Utc::now();
+        let mut evicted = Vec::new();
         self.flows.retain(|_, v| {
             let timeout = flow_timeout(v.key.protocol, &v.state);
-            let cutoff = now - chrono::Duration::seconds(timeout);
-            v.last_seen > cutoff
+            let cutoff  = now - chrono::Duration::seconds(timeout);
+            if v.last_seen > cutoff {
+                true
+            } else {
+                evicted.push(v.clone());
+                false
+            }
         });
+        evicted
     }
 
     pub fn active_count(&self) -> usize {
