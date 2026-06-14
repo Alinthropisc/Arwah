@@ -111,7 +111,7 @@ pub struct TlsRecord {
     pub offered_version: u16,
 }
 
-extern "C" {
+unsafe extern "C" {
     pub fn proto_parse_eth (pkt: *const u8, len: usize, out: *mut EthHdr)  -> usize;
     pub fn proto_parse_ip4 (pkt: *const u8, len: usize, out: *mut Ip4Hdr)  -> usize;
     pub fn proto_parse_ip6 (pkt: *const u8, len: usize, out: *mut Ip6Hdr)  -> usize;

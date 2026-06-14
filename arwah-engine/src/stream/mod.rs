@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, HashMap};
 const MAX_BYTES: usize = 1 << 20;
 
 #[derive(Debug, Default)]
-struct HalfStream { segments: BTreeMap<u32, Vec<u8>>, next_seq: u32, total: usize }
+pub struct HalfStream { segments: BTreeMap<u32, Vec<u8>>, next_seq: u32, total: usize }
 
 impl HalfStream {
     fn push(&mut self, seq: u32, data: Vec<u8>) {

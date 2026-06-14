@@ -31,7 +31,6 @@ enum FilterPredicate {
     And(Box<FilterPredicate>, Box<FilterPredicate>),
     Or(Box<FilterPredicate>, Box<FilterPredicate>),
     Not(Box<FilterPredicate>),
-    Any,
 }
 
 impl DisplayFilter {
@@ -65,7 +64,6 @@ fn eval(pred: &FilterPredicate, pkt: &ParsedPacket) -> bool {
         FilterPredicate::And(a, b) => eval(a, pkt) && eval(b, pkt),
         FilterPredicate::Or(a, b) => eval(a, pkt) || eval(b, pkt),
         FilterPredicate::Not(inner) => !eval(inner, pkt),
-        FilterPredicate::Any => true,
     }
 }
 

@@ -28,7 +28,6 @@ fn severity_num(s: Severity) -> u8 {
         Severity::Medium   => 3,
         Severity::High     => 2,
         Severity::Critical => 1,
-        _                  => 3,
     }
 }
 
@@ -38,7 +37,6 @@ fn flow_state_str(s: FlowState) -> &'static str {
         FlowState::Established => "established",
         FlowState::Closing     => "closing",
         FlowState::Closed      => "closed",
-        _                      => "unknown",
     }
 }
 

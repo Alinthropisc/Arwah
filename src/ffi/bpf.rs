@@ -25,7 +25,7 @@ pub struct BpfPkt {
     pub wire_len: u32,
 }
 
-extern "C" {
+unsafe extern "C" {
     pub fn bpf_exec    (prog: *const BpfProg, pkt: *const BpfPkt) -> u32;
     pub fn bpf_validate(prog: *const BpfProg) -> bool;
 }
