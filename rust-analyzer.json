@@ -1,0 +1,14 @@
+{
+  "$schema": "https://rust-analyzer.github.io/manual/latest/schema.json",
+  "rust-analyzer.linkedProjects": ["./Cargo.toml"],
+  "rust-analyzer.cargo.features": "all",
+  "rust-analyzer.cargo.buildScripts.enable": true,
+  "rust-analyzer.checkOnSave": true,
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.check.extraArgs": ["--", "-D", "warnings"],
+  "rust-analyzer.inlayHints.parameterHints.enable": true,
+  "rust-analyzer.inlayHints.typeHints.enable": true,
+  "rust-analyzer.inlayHints.chainingHints.enable": true,
+  "rust-analyzer.diagnostics.enable": true,
+  "rust-analyzer.completion.autoimport.enable": true
+}

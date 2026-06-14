@@ -1,0 +1,34 @@
+[package]
+name        = "arwah-engine"
+description = "B579-Arwah async capture and analysis engine"
+version.workspace    = true
+edition.workspace    = true
+authors.workspace    = true
+license.workspace    = true
+repository.workspace = true
+
+[dependencies]
+b579-core     = { path = "../b579-core" }
+tokio         = { workspace = true }
+async-channel = { workspace = true }
+pcap          = { workspace = true }
+etherparse    = { workspace = true }
+serde         = { workspace = true }
+thiserror     = { workspace = true }
+ipnet         = { workspace = true }
+chrono        = { workspace = true }
+dashmap       = { workspace = true }
+arc-swap      = { workspace = true }
+parking_lot   = { workspace = true }
+xxhash-rust   = { workspace = true }
+tracing       = { workspace = true }
+maxminddb     = { workspace = true }
+dns-lookup    = { workspace = true }
+async-trait   = "0.1"
+bytes         = "1.10"
+
+[dev-dependencies]
+rstest = { workspace = true }
+tokio  = { workspace = true, features = ["test-util"] }
+
+libc = "0.2"

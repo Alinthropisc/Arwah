@@ -1,0 +1,109 @@
+[workspace]
+members  = ["b579-core", "arwah-engine"]
+resolver = "2"
+
+[workspace.package]
+version    = "0.1.0"
+edition    = "2024"
+authors    = ["B579-Arwah Contributors"]
+license    = "MIT OR Apache-2.0"
+repository = "https://github.com/b579-arwah/arwah"
+
+[workspace.dependencies]
+# async runtime
+tokio         = { version = "1.52", features = ["full"] }
+async-channel = "2.5"
+
+# packet capture
+pcap       = "2.4"
+etherparse = "0.20"
+
+# serialization
+serde      = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# logging / tracing
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+
+# error handling
+thiserror = "2.0"
+anyhow    = "1.0"
+
+# IP / network utilities
+ipnet      = "2.12"
+maxminddb  = "0.24"
+dns-lookup = "3.0"
+
+# CLI
+clap = { version = "4.6", features = ["derive", "color", "env"] }
+
+# TUI
+ratatui   = "0.29"
+crossterm = { version = "0.28", features = ["event-stream"] }
+
+# time
+chrono = { version = "0.4", features = ["serde"] }
+
+# high-perf concurrent collections
+dashmap     = "6.1"
+arc-swap    = "1.7"
+parking_lot = "0.12"
+
+# hashing
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+# testing
+rstest = "0.23"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Root package — the `arwah` CLI binary
+# ─────────────────────────────────────────────────────────────────────────────
+[package]
+name        = "arwah"
+description = "B579-Arwah — next-generation network security sniffer and traffic analyzer"
+version.workspace    = true
+edition.workspace    = true
+authors.workspace    = true
+license.workspace    = true
+repository.workspace = true
+
+[[bin]]
+name = "arwah"
+path = "src/main.rs"
+
+[dependencies]
+b579-core    = { path = "b579-core" }
+arwah-engine = { path = "arwah-engine" }
+
+tokio         = { workspace = true }
+async-channel = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }
+thiserror     = { workspace = true }
+anyhow        = { workspace = true }
+chrono        = { workspace = true }
+clap          = { workspace = true }
+ratatui       = { workspace = true }
+crossterm     = { workspace = true }
+tracing       = { workspace = true }
+tracing-subscriber = { workspace = true }
+pcap          = { workspace = true }
+futures       = "0.3"
+
+[dev-dependencies]
+rstest = { workspace = true }
+tokio  = { workspace = true, features = ["test-util"] }
+
+[profile.release]
+opt-level     = 3
+lto           = "fat"
+codegen-units = 1
+strip         = true
+panic         = "abort"
+
+[profile.dev]
+opt-level = 1
+
+[build-dependencies]
+cc = "1"

@@ -1,0 +1,22 @@
+[package]
+name        = "b579-core"
+description = "B579-Arwah core contracts: traits, types, and error definitions"
+version.workspace    = true
+edition.workspace    = true
+authors.workspace    = true
+license.workspace    = true
+repository.workspace = true
+
+[dependencies]
+serde      = { workspace = true }
+thiserror  = { workspace = true }
+ipnet      = { workspace = true }
+chrono     = { workspace = true }
+etherparse = { workspace = true }
+
+[dev-dependencies]
+rstest = { workspace = true }
+
+# async-trait needed by the CaptureSource trait
+[dependencies.async-trait]
+version = "0.1"

@@ -1,0 +1,14 @@
+/target/
+Cargo.lock
+*.mmdb
+*.pcap
+*.pcapng
+.env
+.DS_Store
+*.orig
+.idea
+.idea/
+.vscode
+.vscode/
+.claude
+.claude/

@@ -1,0 +1,31 @@
+CompileFlags:
+  Add:
+    - "-std=c23"
+    - "-Wall"
+    - "-Wextra"
+    - "-Wpedantic"
+    - "-Wshadow"
+    - "-Wformat=2"
+    - "-Wconversion"
+    - "-Wno-unused-parameter"
+    - "-I./c-engine/include"
+    - "-I./c-engine/src"
+  Remove:
+    - "-W*"
+
+Diagnostics:
+  UnusedIncludes: Strict
+  ClangTidy:
+    Add:
+      - "bugprone-*"
+      - "cert-*"
+      - "clang-analyzer-*"
+      - "performance-*"
+      - "portability-*"
+    Remove:
+      - "cert-err58-cpp"
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
