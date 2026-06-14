@@ -1,14 +1,58 @@
+# ── Rust build artifacts ────────────────────────────────────────────────────
 /target/
-Cargo.lock
-*.mmdb
+**/*.rs.bk
+*.pdb
+
+# Keep Cargo.lock for binaries (reproducible builds)
+# Cargo.lock
+
+# ── C/C++ build artifacts ───────────────────────────────────────────────────
+*.o
+*.a
+*.so
+*.dylib
+*.d
+
+# ── Network capture files ───────────────────────────────────────────────────
 *.pcap
 *.pcapng
+*.cap
+*.dmp
+
+# ── MaxMind databases ───────────────────────────────────────────────────────
+*.mmdb
+
+# ── EVE JSON logs ───────────────────────────────────────────────────────────
+eve.json
+eve-*.json
+/logs/
+
+# ── Secrets / environment ───────────────────────────────────────────────────
 .env
-.DS_Store
-*.orig
-.idea
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets.toml
+
+# ── IDEs ────────────────────────────────────────────────────────────────────
 .idea/
-.vscode
 .vscode/
-.claude
+*.iml
+*.iws
+*.ipr
+.DS_Store
+Thumbs.db
+
+# ── Claude Code ─────────────────────────────────────────────────────────────
 .claude/
+!.claude/settings.json
+
+# ── Misc ────────────────────────────────────────────────────────────────────
+*.orig
+*.bak
+*.swp
+*~
+/dist/
+/out/
